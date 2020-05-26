@@ -1,0 +1,27 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+HEADER_LENGTH	client_test.py	/^HEADER_LENGTH = 10$/;"	v
+HEADER_LENGTH	server_test.py	/^HEADER_LENGTH = 10$/;"	v
+IP	client_test.py	/^IP = "127.0.0.1"$/;"	v
+IP	server_test.py	/^IP = "127.0.0.1"$/;"	v
+PORT	client_test.py	/^PORT = 1234$/;"	v
+PORT	server_test.py	/^PORT = 1234$/;"	v
+client_socket	client_test.py	/^client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)$/;"	v
+clients	server_test.py	/^clients = {}$/;"	v
+message	client_test.py	/^            message = message.encode('utf-8')$/;"	v
+message	client_test.py	/^        message = input()$/;"	v
+message	server_test.py	/^            message = receive_message(notified_socket)$/;"	v
+message_header	client_test.py	/^            message_header = f"{len(message):<{HEADER_LENGTH}}".encode('utf-8')$/;"	v
+my_username	client_test.py	/^my_username = input("Username: ")$/;"	v
+receive_message	server_test.py	/^def receive_message(client_socket):$/;"	f
+server_socket	server_test.py	/^server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)$/;"	v
+sockets_list	server_test.py	/^sockets_list = [server_socket]$/;"	v
+threaded	client_test.py	/^def threaded() :$/;"	f
+user	server_test.py	/^            user = clients[notified_socket]$/;"	v
+user	server_test.py	/^            user = receive_message(client_socket)$/;"	v
+username	client_test.py	/^username = my_username.encode('utf-8')$/;"	v
+username_header	client_test.py	/^username_header = f"{len(username):<{HEADER_LENGTH}}".encode('utf-8')$/;"	v
