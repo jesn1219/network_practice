@@ -79,64 +79,6 @@ def receive_message(client_socket):
             message_length = int(message_header.decode('utf-8').strip())
             # Returns command, message header, message content
             return {'command': command, 'header':message_header, 'data':client_socket.recv(message_length)} 
-        elif command == 7 :
-            #fsend    
-            print("command check#1, {}".format(command))
-            message_header = client_socket.recv(HEADER_LENGTH)
-            # If we received no data, client gracefully closed a connection, for example using socket.close() or socket.shutdown(socket.SHUT_RDWR)
-            if not len(message_header):
-                return False
-            # Convert header to int value
-            command = 7
-            message_length = int(message_header.decode('utf-8').strip())
-            file_name = client_socket.recv(message_length)
-            print("received check ",file_name)
-
-            
-            file_header = client_socket.recv(F_HEADER_LENGTH)
-            file_length = int(file_header.decode('utf-8').strip())
-            print("received_message : header says file length : {}".format(file_length))
-            file_data = b'' 
-            BUFF_SIZE = 4096
-            
-            while (True) :
-                print("entered while")
-                part = client_socket.recv(BUFF_SIZE)
-                file_data += part
-                if len(part) < BUFF_SIZE :
-                    break
-
-            #file_data = client_socket.recv(file_length)
-            #file_data = client_socket.recv(file_length)
-            print("check file_data length : ",len(file_data))
-            # Returns command, message header, message content
-
-            print("Return the values")
-            return {'command': command, 'header':message_header, 'file_name': file_name, 'file_data' : file_data} 
-
-        # \wsend
-        elif command == 8 :
-            
-            message_header = client_socket.recv(HEADER_LENGTH)
-            # If we received no data, client gracefully closed a connection, for example using socket.close() or socket.shutdown(socket.SHUT_RDWR)
-            if not len(message_header):
-                return False
-            # Convert header to int value
-            command = command
-            
-            receiver_name_length = int(message_header.decode('utf-8').strip())
-            receiver_name = client_socket.recv(receiver_name_length)
-
-            file_name_header = client_socket.recv(HEADER_LENGTH)
-            file_name_length = int(file_name_header.decode('utf-8').strip())
-            file_name = client_socket.recv(file_name_length)
-            file_header = client_socket.recv(F_HEADER_LENGTH)
-            file_length = int(file_header.decode('utf-8').strip())
-            file_data = client_socket.recv(file_length)
-
-            # Returns command, message header, message content
-            return {'command': command, 'header':message_header, 'file_name': file_name, 'file_data' : file_data, 'receiver_name' : receiver_name}
-
          
         
         
@@ -150,7 +92,6 @@ def receive_message(client_socket):
             message_length = int(message_header.decode('utf-8').strip())
             # Returns command, message header, message content
             return {'command': command, 'header': message_header, 'data': client_socket.recv(message_length)}
-            
 
 
     except :
