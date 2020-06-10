@@ -13,12 +13,10 @@ HEADER_LENGTH = 10
 F_HEADER_LENGTH = 20
 CLIENT_VERSION = "2.23"
 
-SERVER_IP = "nsl2.cau.ac.kr"
-SERVER_PORT = 20937 
+SERVER_IP = "192.168.0.10"
+SERVER_PORT = 20937
 sent_time = datetime.datetime.now()
 received_time = datetime.datetime.now()
-
-
 
 # get user nickname
 try :
@@ -78,8 +76,9 @@ def threaded() :
                     message_header = client_socket.recv(HEADER_LENGTH)
                     message_length = int(message_header.decode('utf-8').strip())
                     message = client_socket.recv(message_length).decode('utf-8')
-
                     print('{} > {}'.format(username,message))
+
+                # Receive fsend message
                 elif command == 7 :
                     # user header contains client user name length
                     username_header = client_socket.recv(HEADER_LENGTH)
@@ -119,7 +118,7 @@ def threaded() :
                         file.write(file_data)
                         print("File downloaded successfully!".format(username))
                 
-                
+                # Receive wsend message 
                 elif command == 8 :
                     # user header that contains sender's username length
                     username_header = client_socket.recv(HEADER_LENGTH)
@@ -148,6 +147,8 @@ def threaded() :
                     while (file_length > len(file_data)) :
                         part = client_socket.recv(BUFF_SIZE)
                         file_data += part
+                        if (len(part) < BUFF_SIZE) :
+                            break
 
                     file_name = "wsend_"+username+"_"+receiver_name+"_"+file_name
                     print("wsend from {}. file name : {}, file size : {}".format(username,file_name,file_length))
@@ -198,7 +199,7 @@ def threaded() :
                     message = "User close"
                     message = message.encode('utf-8')
                     message_header = "{:<{}}".format(len(message),HEADER_LENGTH).encode('utf-8')
-                    client_socket.send(command_header + message_header + message)
+                    client_socket.send(command_header)
                     client_socket.close()
                     print("Adios")
                     os._exit(0)
@@ -223,10 +224,7 @@ def threaded() :
         
         except Exception as e :
             _, _, tb = sys.exc_info()
-            print('file name = ', __file__)
-            print('error line No = {}'.format(tb.tb_lineno))
-            print(e)
-            print("thread exception") 
+            print("Server closed")
             print("Adios")
             os._exit(0)
 
@@ -280,7 +278,7 @@ def main() :
                         message = "User close"
                         message = message.encode('utf-8')
                         message_header = "{:<{}}".format(len(message),HEADER_LENGTH).encode('utf-8')
-                        client_socket.send(command_header + message_header + message)
+                        client_socket.send(command_header)
                         client_socket.close()
                         print("adios~")
                         os._exit(0)
@@ -314,6 +312,8 @@ def main() :
                         message_header = "{:<{}}".format(len(message),HEADER_LENGTH).encode('utf-8')
                         sent_time = datetime.datetime.now()
                         client_socket.send(command_header+message_header+message)
+
+                    # Sending fsend message
                     elif _command == '\\fsend' :
                         command = 7
                         command_header = "{:<{}}".format(command,C_HEADER_LENGTH).encode('utf-8')
@@ -341,11 +341,11 @@ def main() :
                                     file_data = file_data[BUFF_SIZE:]
                                 client_socket.send(file_data)
 
-
                                 print("fsend message sent")
 
                         else :
                             print("file '{}' is not exists".format(file_name))
+                    # Sending wsend message
                     elif _command == '\\wsend' :
                         command = 8 
                         command_header = "{:<{}}".format(command,C_HEADER_LENGTH).encode('utf-8')
@@ -402,9 +402,9 @@ def main() :
         message = "User close"
         message = message.encode('utf-8')
         message_header = "{:<{}}".format(len(message),HEADER_LENGTH).encode('utf-8')
-        client_socket.send(command_header + message_header + message)
+        client_socket.send(command_header)
         client_socket.close()
-        print("adios~")
+        print("adios~3")
         os._exit(0)
 
     # This case is already handled in above 

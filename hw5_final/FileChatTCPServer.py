@@ -9,8 +9,8 @@ HEADER_LENGTH = 10
 F_HEADER_LENGTH = 20
 SERVER_VERSION = "2.35"
 
-
-IP = "nsl2.cau.ac.kr"
+# Dedicate Server ip, port
+IP = "192.168.0.10"
 PORT = 20937
 
 # Create a socket
@@ -33,9 +33,6 @@ sockets_list = [server_socket]
 clients = {}
 
 print('Chat server start. Listening for connections on {}:{}...'.format(IP,PORT))
-
-
-
 
 # Handles message that received from client 
 # This function only used in new connection check. So, command 7-8 is not included
@@ -81,7 +78,7 @@ def receive_message(client_socket):
             return {'command': command, 'header':message_header, 'data':client_socket.recv(message_length)} 
          
         
-        
+        ''' 
         # command 9 : Signal that client want to close socket
         elif command == 9 :
             message_header = client_socket.recv(HEADER_LENGTH)
@@ -92,8 +89,7 @@ def receive_message(client_socket):
             message_length = int(message_header.decode('utf-8').strip())
             # Returns command, message header, message content
             return {'command': command, 'header': message_header, 'data': client_socket.recv(message_length)}
-
-
+        '''
     except :
         # Other cases. it is exceptional
         return False
@@ -104,20 +100,16 @@ try :
         #listening from sockets 
         read_sockets, _, exception_sockets = select.select(sockets_list, [], sockets_list)
 
-
         # Iterate over notified sockets
         for notified_socket in read_sockets:
 
             # If notified socket is a server socket - There is new connection
             if notified_socket == server_socket:
-
                 # Accepts new client 
                 client_socket, client_address = server_socket.accept()
-
                 # Server receives message that contains nickname info
                 user = receive_message(client_socket)
-
-
+                
                 # Checking the name is valid
                 user_name = user['data'].decode('utf-8')
                 check_flag = True
@@ -155,14 +147,12 @@ try :
                     # Add accepted socket to socket list
                     sockets_list.append(client_socket)
 
-
                     # Save user ip, port, nickname, nicknameheader
                     user_ip = client_address[0]
                     user_port = client_address[1]
                     user["ip"] = user_ip
                     user["port"] = user_port
                     clients[client_socket] = user
-
 
                     # Notify to All users that new user joined
                     command = 0
@@ -184,17 +174,13 @@ try :
                         else :
                             # Send Welcome message
                             client_socket.send(command_header + sender_header + sender_name + message_2_header + message_2)
-
-
                     print('Accepted new connection from {}:{}, username: {}'.format(*client_address, user['data'].decode('utf-8')))
-
 
             # Else existing socket is sending a message
             else:
                 # Receive message
                 message = {} 
         
-
                 # command 1 : \users
                 # command 2 : \wh <nickname> <message>
                 # command 3 : \exit
@@ -205,6 +191,7 @@ try :
                 # command 8 : \wsend
                 # command 9 : client will be closed
 
+                # Parsing message start
                 command_header = notified_socket.recv(C_HEADER_LENGTH)
                 if not command_header :
                     print("Client {} disconnected".format(clients[notified_socket]['data'].decode('utf-8')))
@@ -231,7 +218,6 @@ try :
                     # Returns command, message header, message content
                     message = {'command': command, 'header': message_header, 'data': notified_socket.recv(message_length)}
 
-               
                 elif command == 1 or command == 2 or command == 4 or command == 5 or command == 6  :
                     message_header = notified_socket.recv(HEADER_LENGTH)
                     # If we received no data, client gracefully closed a connection, for example using socket.close() or socket.shutdown(socket.SHUT_RDWR)
@@ -260,14 +246,12 @@ try :
                     file_data = b'' 
                     BUFF_SIZE = 4096
 
+                    # Receive file.
                     while (file_length > len(file_data)) :
                         part = notified_socket.recv(BUFF_SIZE)
                         file_data += part
 
-                    #file_data = client_socket.recv(file_length)
-                    #file_data = client_socket.recv(file_length)
                     # Returns command, message header, message content
-
                     message =  {'command': command, 'header':message_header, 'file_name': file_name, 'file_data' : file_data} 
 
                 elif command == 8 :
@@ -287,34 +271,24 @@ try :
                     file_name = notified_socket.recv(file_name_length)
                     file_header = notified_socket.recv(F_HEADER_LENGTH)
                     file_length = int(file_header.decode('utf-8').strip())
-                    file_data = b'' 
+                    file_data = b''
                     BUFF_SIZE = 4096
-
+                
+                    # Receive file.
                     while (file_length > len(file_data)) :
                         part = notified_socket.recv(BUFF_SIZE)
                         file_data += part
-
-
                     # Returns command, message header, message content
                     message =  {'command': command, 'header':message_header, 'file_name': file_name, 'file_data' : file_data, 'receiver_name' : receiver_name}
 
-                 
-                
-                
                 # command 9 : Signal that client want to close socket
                 elif command == 9 :
                     message_header = notified_socket.recv(HEADER_LENGTH)
                     if not len(message_header):
                         message = {}
-
-                    command = int(command_header.decode('utf-8').strip())
-                    message_length = int(message_header.decode('utf-8').strip())
+                    command = 9 
                     # Returns command, message header, message content
-                    message = {'command': command, 'header': message_header, 'data': client_socket.recv(message_length)}
-
-
-
-
+                    message = {'command': command }
 
                 # If False, client disconnected
                 if message == {}:
@@ -335,11 +309,13 @@ try :
                     message_header = "{:<{}}".format(len(message),HEADER_LENGTH).encode('utf-8')
                     
                     for client_socket in clients:
-
                         # Send to other clients
                         if client_socket != notified_socket:
-
                             client_socket.send(command_header + username_header + username+ message_header + message)
+                    print("Client {} disconnected".format(clients[notified_socket]['data'].decode('utf-8')))
+                    sockets_list.remove(notified_socket)
+                    # Remove from our list of users
+                    del clients[notified_socket]
                 
                 # command 0 almostly means that received  normal chat message
                 elif message["command"] == 0 :
@@ -359,7 +335,6 @@ try :
                         message_header = "{:<{}}".format(len(message),HEADER_LENGTH).encode('utf-8')
                         notified_socket.send(command_header + username_header + username + message_header + message)
                     else :
-
                         # Iterate over connected clients and broadcast message
                         command = 0
                         command_header = "{:<{}}".format(command,C_HEADER_LENGTH).encode('utf-8')
@@ -380,16 +355,12 @@ try :
                     command_header = "{:<{}}".format(command,C_HEADER_LENGTH).encode('utf-8')
                     message = "List of connected users\n"
                     
-                    
                     for c in clients.keys() :
                         client = clients[c]
                         message += "nickname : {}, IP : {}, Port : {}\n".format(client['data'].decode('utf-8'),client["ip"],client["port"])
                     message = message.encode('utf-8')
-                    
                     message_header = "{:<{}}".format(len(message),HEADER_LENGTH).encode('utf-8')
                     notified_socket.send(command_header + message_header + message) 
-
-
 
                 # whisper functions
                 elif message["command"] == 2 :
@@ -522,7 +493,6 @@ try :
                     file_header = "{:<{}}".format(len(file_data),F_HEADER_LENGTH).encode('utf-8')
                     
                     print("fsend. file name : {}, file size : {} bytes".format(file_name.decode('utf-8'),file_header.decode('utf-8')))
-                    
 
                     for client_socket in clients :
                         # But don't sent it to sender
@@ -534,6 +504,7 @@ try :
                             client_socket.send(command_header + username_header + username+ file_name_header+file_name+file_header+receiver_name_header + receiver_name) 
                             file_data_buf = file_data
                             BUFF_SIZE = 4096
+                            # Sending file
                             while(len(file_data_buf) > BUFF_SIZE) :
                                 part = file_data_buf[:BUFF_SIZE]
                                 client_socket.send(part)
@@ -549,7 +520,6 @@ try :
                     username_header = "{:<{}}".format(len(username),HEADER_LENGTH).encode('utf-8')
                     receiver_name = message['receiver_name']
                     receiver_name_header = "{:<{}}".format(len(receiver_name),HEADER_LENGTH).encode('utf-8')
-                  
 
                     file_name = message['file_name']
                     file_name_header = "{:<{}}".format(len(file_name),HEADER_LENGTH).encode('utf-8')
@@ -579,6 +549,7 @@ try :
                             if clients[client_socket]['data'] == receiver_name:
                                 client_socket.send(command_header + username_header + username+ file_name_header+file_name+file_header + receiver_name_header +receiver_name)
                                 BUFF_SIZE = 4096
+                                # Sending file
                                 while(len(file_data) > BUFF_SIZE) :
                                     part = file_data[:BUFF_SIZE]
                                     client_socket.send(part)
@@ -593,12 +564,17 @@ try :
 
             # Remove from our list of users
             del clients[notified_socket]
+except KeyboardInterrupt :
+        server_socket.close()
+        print("Server closed")
+        os._exit(0)
+
 except Exception as e :
         # Server close
         _, _ , tb = sys.exc_info() # tb -> traceback object print 'file name = ', __file__ print 'error line No = {}'.format(tb.tb_lineno) print e
-        print('file name = ', __file__)
-        print('error line No = {}'.format(tb.tb_lineno))
-        print(e)
+        #print('file name = ', __file__)
+        #print('error line No = {}'.format(tb.tb_lineno))
+        #print(e)
         server_socket.close()
         print("Server closed")
         os._exit(0)
